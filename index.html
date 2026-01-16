@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#050505">
+    <meta name="description" content="Program Latihan Petarung 21 Hari - Level 3.">
+    <title>FIGHTER L3: INTEL OPS</title>
+    <style>
+        /* --- CSS VARIABLES & RESET --- */
+        :root {
+            --bg-color: #050505;
+            --card-bg: #141414;
+            --primary: #ff0000;
+            --primary-dim: #5c0000;
+            --text-main: #dedede;
+            --text-dim: #666;
+            --success: #00ff41;
+            --warning: #ffcc00;
+            --font-stack: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            font-family: var(--font-stack);
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container { max-width: 600px; width: 100%; position: relative; padding-bottom: 80px; }
+        .hidden { display: none !important; }
+
+        /* --- TYPOGRAPHY --- */
+        h1, h2, h3 { margin: 0; font-style: italic; text-transform: uppercase; }
+        
+        .title-glitch {
+            color: var(--primary);
+            font-size: 2.2rem;
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 0px rgba(255,255,255,0.1);
+            margin-bottom: 5px;
+        }
+
+        /* --- COMPONENTS --- */
+        
+        /* HEADER STATS (HUD) */
+        .hud-panel {
+            background: #111;
+            border: 1px solid #333;
+            border-top: 3px solid var(--primary);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.7);
+        }
+
+        .hud-top {
+            display: flex; justify-content: space-between; align-items: flex-end;
+            margin-bottom: 15px; border-bottom: 1px solid #222; padding-bottom: 10px;
+        }
+
+        .day-big { font-size: 2.5rem; font-weight: 900; color: #fff; line-height: 0.9; }
+        .day-label { font-size: 0.8rem; color: var(--primary); letter-spacing: 1px; text-transform: uppercase; font-weight: bold;}
+        
+        /* INTEL GRID (STATISTICS) */
+        .intel-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        
+        .intel-card {
+            background: #0a0a0a; border: 1px solid #222;
+            padding: 8px; border-radius: 4px; text-align: center;
+        }
+        
+        .intel-val { font-size: 1.2rem; font-weight: bold; color: #fff; }
+        .intel-lbl { font-size: 0.6rem; color: #666; text-transform: uppercase; margin-top: 2px; }
+
+        /* MISSION OBJECTIVE CARD */
+        .mission-card {
+            background: rgba(255, 0, 0, 0.05);
+            border: 1px dashed var(--primary-dim);
+            padding: 12px; margin-bottom: 20px;
+            border-radius: 6px; font-size: 0.85rem;
+        }
+        .mission-title { color: var(--primary); font-weight: bold; margin-bottom: 5px; display: block; }
+        .mission-text { color: #aaa; line-height: 1.4; }
+
+        /* PROGRESS BAR */
+        .progress-container { margin: 15px 0; }
+        .progress-track { background: #222; height: 6px; border-radius: 3px; overflow: hidden; }
+        .progress-fill {
+            height: 100%; background: var(--primary); width: 0%;
+            transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+            box-shadow: 0 0 10px var(--primary);
+        }
+        .progress-text { font-size: 0.7rem; color: #555; text-align: right; margin-top: 4px; }
+
+        /* EXERCISE CARD */
+        .section-header {
+            display: flex; align-items: center; gap: 10px;
+            margin: 25px 0 10px 0;
+            color: #fff; font-weight: 800; font-size: 1rem;
+        }
+        .section-header::after {
+            content: ''; flex-grow: 1; height: 1px; background: linear-gradient(90deg, #333, transparent);
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-left: 3px solid #333;
+            padding: 14px; margin-bottom: 10px;
+            border-radius: 0 6px 6px 0;
+            position: relative;
+        }
+        
+        .card.completed {
+            border-left-color: var(--success);
+            background: #081408; opacity: 0.6;
+        }
+        .card.completed .card-title { text-decoration: line-through; color: #555; }
+
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+        .card-title { font-weight: 700; font-size: 0.95rem; color: #dedede; line-height: 1.3; flex-grow: 1; }
+        .card-desc { font-size: 0.8rem; color: #888; margin-top: 5px; line-height: 1.3; }
+        .card-phys { margin-top: 6px; font-size: 0.7rem; color: var(--primary); font-weight: bold; text-transform: uppercase; }
+
+        /* CHECKBOX */
+        .check-wrapper { position: relative; width: 22px; height: 22px; flex-shrink: 0; }
+        .native-check { opacity: 0; width: 100%; height: 100%; cursor: pointer; z-index: 2; position: absolute; }
+        .custom-check {
+            width: 100%; height: 100%; border: 2px solid #444; border-radius: 4px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .native-check:checked + .custom-check { border-color: var(--success); background: rgba(0,255,65,0.1); }
+        .native-check:checked + .custom-check::after { content: '✓'; color: var(--success); font-weight: 900; font-size: 14px; }
+
+        /* BUTTONS */
+        .btn-main {
+            background: var(--primary); color: #000; border: none; padding: 15px 30px;
+            font-size: 1.1rem; font-weight: 900; text-transform: uppercase; cursor: pointer;
+            width: 100%; clip-path: polygon(5% 0, 100% 0, 100% 70%, 95% 100%, 0 100%, 0 30%);
+            margin-top: 20px;
+        }
+        .btn-danger {
+            background: transparent; border: 1px solid #333; color: #555;
+            padding: 10px; width: 100%; font-size: 0.8rem; margin-top: 30px; cursor: pointer;
+        }
+
+        .setup-screen { text-align: center; padding-top: 40px; }
+        .finish-screen { text-align: center; padding-top: 40px; color: var(--success); }
+
+    </style>
+</head>
+<body>
+
+<div class="container" id="app">
+    </div>
+
+<script>
+    // --- 1. DATA CENTER ---
+    const CONFIG = {
+        totalDays: 21,
+        storageKey: 'fighter_l3_start',
+        dataKey: 'fighter_l3_data'
+    };
+
+    const MISSION_PROFILE = {
+        objective: "REKONSTRUKSI TOTAL",
+        format: "High Volume Calisthenics + Interval Running",
+        target: "Meningkatkan VO2 Max, Hypertrophy Otot, dan Ketahanan Mental di bawah tekanan."
+    };
+
+    const SCHEDULE = {
+        1: { 
+            title: "FIGHT UNDER FATIGUE",
+            morning: [
+                {id: "m1_1", name: "Lari 4 km (Zone 3)", desc: "Pace sedang. Nafas teratur 2-2.", phys: "VO2 Max"},
+                {id: "m1_2", name: "Sprint 100m x 10", desc: "90% speed. Jalan balik istirahat.", phys: "Power"},
+                {id: "m1_3", name: "Lompat Tali 20 menit", desc: "3 menit on / 30 detik off.", phys: "Coordination"}
+            ],
+            evening: [
+                {id: "e1_1", name: "Circuit Fatigue (6 Ronde)", desc: "NO STOP: Burpees x30, Pushup x50, Squat x80.", phys: "Mental"},
+                {id: "e1_2", name: "Plank Total 5 menit", desc: "Tarik perut ke dalam.", phys: "Core"}
+            ]
+        },
+        2: { 
+            title: "RAW STRENGTH",
+            morning: [
+                {id: "m2_1", name: "Push-up Lambat x 80", desc: "Turun 5 detik, naik 1 detik.", phys: "Hypertrophy"},
+                {id: "m2_2", name: "Diamond Push-up x 50", desc: "Tangan rapat wajik.", phys: "Triceps"},
+                {id: "m2_3", name: "Pull-up / Row x 40", desc: "Gunakan palang/meja.", phys: "Back"}
+            ],
+            evening: [
+                {id: "e2_1", name: "Squat x 150", desc: "Punggung tegak.", phys: "Legs"},
+                {id: "e2_2", name: "Lunges x 100", desc: "Lutut hampir sentuh lantai.", phys: "Balance"},
+                {id: "e2_3", name: "Wall Sit (Failure)", desc: "Tahan sampai jatuh.", phys: "Pain Tolerance"},
+                {id: "e2_4", name: "Core Kill", desc: "Situp x200 + Leg Raise x100.", phys: "Abs"}
+            ]
+        },
+        3: { 
+            title: "REFLEX & SPEED",
+            morning: [
+                {id: "m3_1", name: "Footwork Acak 25 min", desc: "Bergerak liar.", phys: "Agility"},
+                {id: "m3_2", name: "Sprint Tangga x 30", desc: "Naik cepat, turun santai.", phys: "Explosive"}
+            ],
+            evening: [
+                {id: "e3_1", name: "Reaction Drill 25 min", desc: "Lempar bola tembok/koin.", phys: "Reflex"},
+                {id: "e3_2", name: "Shadow Boxing SPEED", desc: "10 ronde. Pukulan kilat.", phys: "Speed"}
+            ]
+        },
+        4: { 
+            title: "CORE & NECK",
+            morning: [
+                {id: "m4_1", name: "Core Statis Set", desc: "Plank 5 min + Side Plank 3 min/sisi.", phys: "Stability"}
+            ],
+            evening: [
+                {id: "e4_1", name: "Leher Beton", desc: "Tekan kepala 4 arah. Tahan 5s x 30 rep.", phys: "Neck"},
+                {id: "e4_2", name: "Abs Finisher", desc: "Bicycle Crunch x150, Flutter kick x150.", phys: "Endurance"}
+            ]
+        },
+        5: { 
+            title: "KILL POWER",
+            morning: [
+                {id: "m5_1", name: "Explosive Set", desc: "Jump squat x80, Clap pushup x40.", phys: "Fast Twitch"}
+            ],
+            evening: [
+                {id: "e5_1", name: "Shadow Boxing POWER", desc: "10 ronde. Putar pinggul.", phys: "Power"},
+                {id: "e5_2", name: "Sprint 100m x 20", desc: "Ayunan tangan kuat.", phys: "Anaerobic"}
+            ]
+        },
+        6: { 
+            title: "SURVIVAL DAY",
+            morning: [
+                {id: "m6_1", name: "Circuit Neraka 8 Ronde", desc: "Burpees x35, Pushup x60, Squat x90.", phys: "Survival"}
+            ],
+            evening: [
+                {id: "e6_1", name: "Shadow Boxing 60 MENIT", desc: "Non-stop.", phys: "Mental"},
+                {id: "e6_2", name: "Total Failure", desc: "Wall sit s.d jatuh, Plank s.d jatuh.", phys: "Limit Break"}
+            ]
+        },
+        0: { // MINGGU
+            title: "ACTIVE RECOVERY",
+            morning: [], evening: []
+        }
+    };
+
+    const DAY_NAMES = ["MINGGU", "SENIN", "SELASA", "RABU", "KAMIS", "JUMAT", "SABTU"];
+
+    // --- 2. ENGINE ---
+    
+    const App = {
+        appEl: document.getElementById('app'),
+
+        init() {
+            const startDateStr = localStorage.getItem(CONFIG.storageKey);
+            if (!startDateStr) {
+                this.renderSetup();
+            } else {
+                this.calculateProgress(new Date(startDateStr));
+            }
+        },
+
+        startProgram() {
+            const now = new Date();
+            now.setHours(0,0,0,0);
+            localStorage.setItem(CONFIG.storageKey, now.toISOString());
+            localStorage.setItem(CONFIG.dataKey, JSON.stringify([]));
+            this.init();
+        },
+
+        calculateProgress(startDate) {
+            const now = new Date();
+            now.setHours(0,0,0,0);
+            const start = new Date(startDate);
+            const diffTime = now - start;
+            const currentDay = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+            if (currentDay > CONFIG.totalDays) {
+                this.renderFinish();
+            } else {
+                this.renderTracker(currentDay, now.getDay());
+            }
+        },
+
+        resetProgram() {
+            if(confirm("⚠️ DATA AKAN HILANG. Yakin reset program?")) {
+                localStorage.clear();
+                location.reload();
+            }
+        },
+
+        toggleCheck(id) {
+            let progress = JSON.parse(localStorage.getItem(CONFIG.dataKey) || "[]");
+            const card = document.getElementById(`card-${id}`);
+            
+            if (progress.includes(id)) {
+                progress = progress.filter(item => item !== id);
+                card.classList.remove('completed');
+            } else {
+                progress.push(id);
+                card.classList.add('completed');
+                if (navigator.vibrate) navigator.vibrate(50);
+            }
+            localStorage.setItem(CONFIG.dataKey, JSON.stringify(progress));
+            
+            // Update stats realtime
+            this.updateStatsDisplay(progress);
+        },
+
+        // Hitung statistik sederhana
+        getStats(progressArray) {
+            const completedCount = progressArray.length;
+            // Estimasi kasar grade berdasarkan jumlah latihan
+            let grade = "F";
+            if (completedCount > 10) grade = "D";
+            if (completedCount > 30) grade = "C";
+            if (completedCount > 60) grade = "B";
+            if (completedCount > 100) grade = "A";
+            if (completedCount > 150) grade = "S";
+
+            return { count: completedCount, grade: grade };
+        },
+
+        updateStatsDisplay(progress) {
+            const stats = this.getStats(progress);
+            const elCount = document.getElementById('stat-count');
+            const elGrade = document.getElementById('stat-grade');
+            if(elCount) elCount.innerText = stats.count;
+            if(elGrade) elGrade.innerText = stats.grade;
+        },
+
+        // --- 3. RENDERING ---
+
+        renderSetup() {
+            this.appEl.innerHTML = `
+                <div class="setup-screen">
+                    <h1 class="title-glitch">LEVEL 3</h1>
+                    <p style="color:#666; margin-bottom:30px;">PROGRAM PETARUNG 21 HARI</p>
+                    
+                    <div class="mission-card" style="text-align:left;">
+                        <span class="mission-title">📂 TUJUAN MISI:</span>
+                        <div class="mission-text">
+                            ${MISSION_PROFILE.target}
+                        </div>
+                        <br>
+                        <span class="mission-title">⚡ FORMAT:</span>
+                        <div class="mission-text">
+                            ${MISSION_PROFILE.format}
+                        </div>
+                    </div>
+
+                    <button id="btnStart" class="btn-main">MULAI MISI</button>
+                </div>
+            `;
+            document.getElementById('btnStart').addEventListener('click', () => this.startProgram());
+        },
+
+        renderFinish() {
+            this.appEl.innerHTML = `
+                <div class="finish-screen">
+                    <h1>MISI SELESAI</h1>
+                    <p>Level 3 Ditaklukkan.</p>
+                    <button id="btnReset" class="btn-danger">ULANGI</button>
+                </div>
+            `;
+            document.getElementById('btnReset').addEventListener('click', () => this.resetProgram());
+        },
+
+        renderTracker(dayNum, dayIndex) {
+            const data = SCHEDULE[dayIndex];
+            const progress = JSON.parse(localStorage.getItem(CONFIG.dataKey) || "[]");
+            const percent = ((dayNum - 1) / CONFIG.totalDays) * 100;
+            const stats = this.getStats(progress);
+
+            let html = `
+                <div class="hud-panel">
+                    <div class="hud-top">
+                        <div>
+                            <div class="day-label">HARI KE</div>
+                            <div class="day-big">${dayNum}<span style="font-size:1rem; color:#555;">/${CONFIG.totalDays}</span></div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div class="day-label" style="color:#fff;">${DAY_NAMES[dayIndex]}</div>
+                            <div style="color:var(--primary); font-weight:bold; font-size:0.9rem;">${data ? data.title : 'REST'}</div>
+                        </div>
+                    </div>
+
+                    <div class="progress-container">
+                        <div class="progress-track">
+                            <div class="progress-fill" style="width: ${percent}%"></div>
+                        </div>
+                        <div class="progress-text">PROGRESS WAKTU: ${Math.floor(percent)}%</div>
+                    </div>
+
+                    <div class="intel-grid">
+                        <div class="intel-card">
+                            <div class="intel-val" id="stat-grade">${stats.grade}</div>
+                            <div class="intel-lbl">GRADE</div>
+                        </div>
+                        <div class="intel-card">
+                            <div class="intel-val" id="stat-count">${stats.count}</div>
+                            <div class="intel-lbl">SELESAI</div>
+                        </div>
+                        <div class="intel-card">
+                            <div class="intel-val" style="color:var(--success)">AKTIF</div>
+                            <div class="intel-lbl">STATUS</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mission-card">
+                    <span class="mission-title">TUJUAN & FORMAT</span>
+                    <p class="mission-text" style="margin:0;">${MISSION_PROFILE.target} Fokus pada ${MISSION_PROFILE.format}.</p>
+                </div>
+
+                <div id="workoutList">
+            `;
+
+            if (dayIndex === 0) {
+                html += `
+                    <div class="card" style="text-align:center; padding:30px;">
+                        <h3>💤 RECOVERY</h3>
+                        <p class="card-desc">Istirahat total.</p>
+                    </div>`;
+            } else if (data) {
+                const renderSet = (title, items) => {
+                    if(!items.length) return '';
+                    let s = `<div class="section-header">${title}</div>`;
+                    items.forEach(ex => {
+                        const uid = `${ex.id}_d${dayNum}`;
+                        const isDone = progress.includes(uid);
+                        s += `
+                            <div class="card ${isDone ? 'completed' : ''}" id="card-${uid}">
+                                <div class="card-header">
+                                    <label class="card-title" for="${uid}">${ex.name}</label>
+                                    <div class="check-wrapper">
+                                        <input type="checkbox" id="${uid}" class="native-check" ${isDone ? 'checked' : ''}>
+                                        <div class="custom-check"></div>
+                                    </div>
+                                </div>
+                                <p class="card-desc">${ex.desc}</p>
+                                <div class="card-phys">🎯 ${ex.phys}</div>
+                            </div>
+                        `;
+                    });
+                    return s;
+                };
+                html += renderSet("☀️ PAGI", data.morning);
+                html += renderSet("🌙 MALAM", data.evening);
+            }
+
+            html += `</div>
+                <button id="btnAbort" class="btn-danger">⚠️ BATALKAN PROGRAM</button>
+            `;
+
+            this.appEl.innerHTML = html;
+
+            // Events
+            document.getElementById('workoutList')?.addEventListener('change', (e) => {
+                if (e.target.classList.contains('native-check')) this.toggleCheck(e.target.id);
+            });
+            document.getElementById('btnAbort')?.addEventListener('click', () => this.resetProgram());
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => App.init());
+
+</script>
+</body>
+</html>
